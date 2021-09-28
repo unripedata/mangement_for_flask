@@ -1,0 +1,299 @@
+{% extends "/001/common/main/layout.html" %}
+	{% block topCss %}
+ 	<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.24/css/jquery.dataTables.css"><font></font>
+	{% endblock %}
+				{% block main %}
+				<div class="container-fluid p-0">
+
+					<h1 class="h3 mb-3">Settings</h1>
+
+					<div class="row">
+						<div class="col-md-3 col-xl-2">
+
+							<div class="card">
+								<div class="card-header">
+									<h5 class="card-title mb-0">OS</h5>
+								</div>
+
+								<div class="list-group list-group-flush" role="tablist">
+									<a class="list-group-item list-group-item-action active" data-toggle="list" href="#Windows " role="tab" id="tab_windows">
+									  	Windows
+									</a>
+									<a class="list-group-item list-group-item-action" data-toggle="list" href="#Linux" role="tab" id="tab_linux">
+									  	Linux
+									</a>
+								</div>
+							</div>
+						</div>
+
+						<div class="col-md-9 col-xl-10">
+							<div class="tab-content">
+								<!-- 윈도우 PC 정보 탭	-->
+								<div class="tab-pane show active" id="Windows" role="tabpanel">
+									<div class="card">
+										<div class="card-body">
+											<h5 class="card-title">연결된 윈도우 디바이스 정보</h5>
+											<div class="row">
+												<div class="col-md-7">
+													<label class="form-label" for="windows_ips">IP 목록</label>
+													<select id="windows_client" class="form-control" id="windows_ips">
+													</select>
+												</div>
+												<div class="col-md-5">
+													<label class="form-label">버튼</label>
+													<div>
+														<button id="btnWindowsLoad" class="btn btn-primary float-end">검색</button>
+														<button id="btnWindowsSync" class="btn btn-primary float-end">동기화</button>
+													</div>
+												</div>
+											</div>
+
+										</div>
+									</div>
+									<div class="card">
+										<div class="card-body">
+											<h5 class="card-title">용량</h5>
+											<div class="card-body px-4">
+												<table id="device_table" class="display">
+													<thead>
+														<tr>
+															<th>ip</th>
+															<th>Name</th>
+															<th>Total</th>
+															<th>Used</th>
+															<th>Free</th>
+															<th>Percent</th>
+															<th>SyncTime</th>
+														</tr>
+													</thead>
+												</table>
+											</div>
+										</div>
+									</div>
+									<div class="card">
+										<div class="card-body">
+											<h5 class="card-title">서비스</h5>
+											<div class="card-body px-4">
+												<table id="service_table" class="display">
+													<thead>
+														<tr>
+															<th>ip</th>
+															<th>Name</th>
+															<th>Desc</th>
+															<th>Status</th>
+															<th>StartType</th>
+															<th>Logon</th>
+															<th>SyncTime</th>
+														</tr>
+													</thead>
+												</table>
+											</div>
+										</div>
+									</div>
+									<div class="card">
+										<div class="card-body">
+											<h5 class="card-title">작업 스케줄러</h5>
+											<div class="card-body px-4">
+												<table id="job_schedule_table" class="display">
+												<thead>
+													<tr>
+														<th>ip</th>
+														<th>Name</th>
+														<th>Path</th>
+														<th>Status</th>
+														<th>LastRunTime.</th>
+														<th>LastResult</th>
+														<th>SyncTime</th>
+													</tr>
+												</thead>
+											</table>
+											</div>
+										</div>
+									</div>
+								</div>
+
+								<!-- 계정 등록 탭 -->
+								<div class="tab-pane fade active" id="Linux" role="tabpanel">
+									<div class="card">
+										<div class="card-header">
+											<h5 class="card-title mb-0">Linux</h5>
+										</div>
+										<div class="card-body">
+
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+				{% endblock %}
+	{% block bottomJs %}
+	<script type="text/javascript" charset="utf8" src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+	<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.js"></script>
+	<script>
+		// 화면 초기화
+		$(document).ready( function () {
+			initWindowsTable();
+			windowsClientList();
+		});
+
+
+		//윈도우 Select Option 추가
+		let windowsClient = document.getElementById('windows_client');
+		let windowsClientList = () => {
+			windowsClient.options.length = 0;
+			var op = new Option();
+			op.value = '';
+			op.text = '전체';
+			windowsClient.add(op);
+			commonAjaxToJson("/worker/client/get/list","POST", null, function(ajaxData) {
+				if(ajaxData.result){
+					let data = ajaxData.data;
+					for(let d in data) {
+						op = new Option();
+						op.value = data[d];
+						op.text = data[d];
+						windowsClient.add(op);
+					}
+				}
+			});
+		}
+
+		// 윈도우 클라이언트 동기화
+		let syncWindowsClients = (isNotice) => {
+			commonAjaxToJson("/worker/client/req/sync","POST", null, function(ajaxData) {
+				if(ajaxData.result){
+					windowsClientList();
+					syncWindowsClientDevice()
+				}
+			});
+		}
+
+
+		// 윈도우 클라이언트 정보 동기화
+		let syncWindowsClientDevice = (isNotice) => {
+			commonAjaxToJson("/client/device/sync","POST", null, function(ajaxData) {
+				let data = ajaxData.result;
+			});
+		}
+
+		var selectedValue = (obj) => {
+			let val = null;
+			for(i=0; i<obj.options.length; i++) {
+				if(obj.options[i].selected == true) {
+					val = obj.options[i].value;
+					break;
+				}
+			}
+			return val
+		}
+
+		let getWindowsParams = () => {
+			let params = {
+				'ip': selectedValue(windowsClient)
+			}
+			return params
+		}
+
+		let loadWindowsClientDevice = () => {
+			let params = getWindowsParams();
+			device_table.clear().draw();
+			service_table.clear().draw();
+			job_schedule_table.clear().draw();
+			commonAjaxToJson("/client/device/get/list","POST", params, function(ajaxData) {
+				let data = ajaxData.data;
+
+				for (let key in data) {
+				    let ip = key;
+				    let device = data[key];
+
+					// 디바이스 동기화
+					setTimeout(() => {
+						let store = device["store"];
+						for( let i=0; i< store.length; i++) {
+							device_table.row.add( [
+								ip,
+								store[i]['name'],
+								store[i]['total']+"GB",
+								store[i]['used']+"GB",
+								store[i]['free']+"GB",
+								store[i]['percent'] +"%",
+								device['worked']
+							] ).draw( true );
+						}
+					}, 0);
+
+					// 서비스 목록 동기화
+					setTimeout(() => {
+						let service = device["service"]
+						for( let i=0; i< service.length; i++) {
+							service_table.row.add( [
+								ip,
+								service[i]['name'],
+								service[i]['desc'],
+								service[i]['status'],
+								service[i]['startType'],
+								service[i]['logon'],
+								device['worked']
+							] ).draw( true );
+						}
+					}, 0);
+
+					// 작업 스케줄 동기화
+					setTimeout(() => {
+						let taskscheduler = device["taskscheduler"]
+						for( let i=0; i< taskscheduler.length; i++){
+							job_schedule_table.row.add([
+								ip,
+								taskscheduler[i]['name'],
+								taskscheduler[i]['path'],
+								taskscheduler[i]['status'],
+								taskscheduler[i]['lastRunTime'],
+								taskscheduler[i]['lastResult'],
+								device['worked']
+							]).draw( true );
+						}
+					}, 0);
+				}
+			});
+		}
+
+		// 윈도우 테이블 초기화
+		let initWindowsTable = () => {
+			device_table = $('#device_table').DataTable({
+				scrollY:300
+    		});
+
+    		service_table = $('#service_table').DataTable({
+				scrollY:300
+    		});
+
+    		job_schedule_table = $('#job_schedule_table').DataTable({
+				scrollY:300
+    		});
+		}
+
+		// 윈도우 탭 클릭시
+		let tabWindows = document.getElementById('tab_windows');
+        tabWindows.onclick = function() {
+
+        }
+
+		// 리눅스 탭 클릭시
+		let tabLinux = document.getElementById('tab_linux');
+		tabLinux.onclick = function() {
+			commonAlert("현재 개발 진행 중 입니다.","Error","error");
+        }
+
+        let btnWindowsSync = document.getElementById('btnWindowsSync');
+		btnWindowsSync.onclick = function() {
+			syncWindowsClients();
+		}
+
+		let btnWindowsLoad = document.getElementById('btnWindowsLoad');
+		btnWindowsLoad.onclick = function() {
+			loadWindowsClientDevice();
+		}
+	</script>
+	{% endblock %}

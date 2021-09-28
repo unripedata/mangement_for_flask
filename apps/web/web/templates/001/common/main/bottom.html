@@ -1,0 +1,14 @@
+	<script>
+    const btnLogOut = document.getElementById('btnLogOut');
+    btnLogOut.onclick = function() {
+        commonAjaxToJson("/signout.do","POST", null, function(ajaxData) {
+            console.log(ajaxData.result);
+            if(ajaxData.result){
+                location.href="/signin";
+            }
+            else{
+                alert(ajaxData.msg);
+            }
+        });
+    }
+    </script>
