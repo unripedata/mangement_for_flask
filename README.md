@@ -67,3 +67,4 @@
    - 소스 리펙토링 후 반영 예정
    - 하위 도메인 기준 도메인 용도 분리 방법에 대해 변경 필요
      - 기존 api.unripedata.com -> 변경 www.unripdata.com/api/~
+     - dockerfile 내용 변경 필요
